@@ -25,18 +25,66 @@ exec(response.text)
 transmute_FindMCS_parameters()
 ```
 
-but things get messy quickly. As a placeholder for the `response.text` in the following examples a string is used.
+..but things get messy quickly. As seen in the comment in this Gist:
+
+https://gist.github.com/matteoferla/24d9a319d05773ae219dd678a3aa11be
+
+
+As a placeholder for the `response.text` in the following examples a string is used.
 
 The following works:
 
-```python3
-faux_gist:str = 'print(i)'  # pretend this is the gist from `response.text`
-    
-i = 'hello world'
-
+```python
+faux_gist:str = 'greet = lambda who: print(f"Hello {who}")'  # pretend this is the gist from `response.text`
 exec(faux_gist)
+greet('World')
 ```
 
 But as soon as one moves away from the global namespace issues happen.
+This would be needed were one to want to wrap the gist execution in a function
+to avoid global namespace pollution.
 
-The `exec` function accepts optionally a `globals` and `locals` parameter.
+This will fail:
+
+```python
+def nonglobal(faux_gist:str):
+    exec(faux_gist)
+    return greet  # NameError: name 'greet' is not defined
+    
+# assign to a variable with a different name
+salute = nonglobal('greet = lambda who: print(f"Hello {who}")')
+salute('Mars')
+```
+
+But this will pollute the global namespace:
+
+```python
+def nonglobal(faux_gist:str):
+    exec(faux_gist, globals())
+    return greet  # NameError: name 'greet' is not defined
+    
+# assign to a variable with a different name
+salute = nonglobal('greet = lambda who: print(f"Hello {who}")')
+salute('Mars')
+assert 'greet' not in globals() # AssertionError: 
+```
+
+As `globals()` returns the actual global namespace, not a copy.
+If a copy is passed the copy will have the new variable and the namespace will not be polluted.
+
+```python
+def nonglobal(faux_gist:str):
+    faux_globals= {**globals(), **locals()}
+    exec(faux_gist,  faux_globals)
+    return faux_globals['beware']
+  
+# assign to a variable with a different name
+enguard = nonglobal('import warnings; beware = lambda who: warnings.warn(f"Beware {who}")')
+enguard('Mars')
+assert 'beware' not in globals()
+```
+
+This used to not work in Python 3.7 due to the import being lost.
+Hence the file imports.py...
+
+So migrating my gist importing notebook is not actually useful anymore! Ops...
