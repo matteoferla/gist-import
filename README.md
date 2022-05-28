@@ -1,9 +1,37 @@
 # gist-import
 GitHub Gist are handy snippets, which are meant to be copy-pasted into one's code... but what if you could import them?
 
-> This is a low-priority work-in-progress weekend project.
-> And may completely forget about it in the future.
-> As I currently need to find the main Jupyter notebook the code was in...
+## Installation
+
+```bash
+pip install gist-import
+```
+
+## Usage
+
+The main class is `GistImporter`. This allows one to import cleanly a gist into a project.
+Namely it retrieves the gist and executes it with any given additional named arguments
+in a local context thus not polluting the global namespace (see background).
+If required it does a special import of the gist's imports (<3.8) thanks to `get_imports_in_codeblock`.
+The variables in that namespace are then available as items.
+
+```python
+from gist_import import GistImporter
+gi = GistImporter('24d9a319d05773ae219dd678a3aa11be')
+Safeguard = gi['Safeguard']
+```
+
+In the case of a codeblock that fails because of, say a terminal line, a warning saying so will be printed.
+```python
+from gist_import import GistImporter
+gi = GistImporter('👾👾👾', foo=1, bar=2)  # a gist with a syntax error on the last line will not run...
+clean_code = gi.codeblock.split('\n')[:-1] # skip last line
+gi = GistImporter.from_code_block(clean_code, foo=1, bar=2)
+baz = gi['baz']
+```
+
+The function `get_imports_in_codeblock` is a helper function that finds any imports and return the modules as
+values of a dictionary.
 
 ## Background
 
@@ -85,6 +113,5 @@ assert 'beware' not in globals()
 ```
 
 This used to not work in Python 3.7 due to the import being lost.
-Hence the file imports.py...
-
-So migrating my gist importing notebook is not actually useful anymore! Ops...
+Hence the function `get_imports_in_codeblock` which returns a dictionary of string to module
+of the imports in the codeblock —star imports included.
