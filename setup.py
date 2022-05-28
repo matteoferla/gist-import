@@ -1,4 +1,4 @@
-__version__ = '1.0'
+__version__ = '1.0.1'
 from setuptools import setup, find_packages
 from typing import List
 
@@ -12,8 +12,9 @@ if os.path.exists(os.path.join(this_directory, 'README.md')):
         long_description = f.read()
         description = long_description.split('\n')[1]  # the first line is the description after the title
 else:
-    long_description = ''
-    description = ''
+    long_description = '(See GitHub README.md)'
+    description = "GitHub Gist are handy snippets, which are meant to be copy-pasted into one's code... "+\
+                  "but what if you could import them? This is the solution."
 
 if os.path.exists(os.path.join(this_directory, 'requirements.txt')):
     with open(os.path.join(this_directory, 'requirements.txt'), encoding='utf-8') as fh:
