@@ -1,5 +1,5 @@
 from __future__ import annotations
-import requests, warnings
+import requests, warnings, re
 from typing import Optional, Dict, Any, Union
 from .imports import get_imports_in_codeblock  # this is not a class, but a function
 
@@ -91,18 +91,61 @@ class GistImporter:
         del self.pocket_globals[key]
 
     @classmethod
-    def from_code_block(cls, code_block: str, **kwargs) -> GistImporter:
+    def mock(cls, **kwargs) -> GistImporter:
         """
-        This circumvents the gist by excecuting the code block provided.
+        This make a mock GistImporter object.
         """
         self = cls.__new__(cls)
         self.gist_id = ''
         self.gist_data = {}
         self.filename = None
         self.gist_file_data = {}
-        self.gist_codeblock = code_block
+        self.gist_codeblock = ''
         self.gist_description = ''
         self.gist_owner = ''
         self.pocket_globals = {**globals(), **locals(), **kwargs}
+        return self
+
+
+    @classmethod
+    def from_code_block(cls, code_block: str, **kwargs) -> GistImporter:
+        """
+        This circumvents the gist by excecuting the code block provided.
+        """
+        self = cls.mock(**kwargs)
+        self.gist_codeblock = code_block
         self._run()
         return self
+
+
+    @classmethod
+    def from_url(cls, url: str, **kwargs) -> GistImporter:
+        """
+        This excecutes the code from the url provided (not an HTML MIME type but a raw text type file)
+        """
+        self = cls.mock(**kwargs)
+        response: requests.Response = requests.get(url)
+        response.raise_for_status()
+        self.gist_codeblock = response.text
+        self._run()
+        return self
+
+    @classmethod
+    def from_github(cls, url: str, **kwargs) -> GistImporter:
+        """
+        This excecutes the code from a GitHub url provided.
+        But differs from the ``from_url`` method in that a URL from a GitHub page is a HTML page,
+        say
+        ``https://github.com/username/repo/blob/main/filename.py`` is a HTML page,
+        while the "raw" version of the file is a raw text file:
+        ``https://raw.githubusercontent.com/username/repo/main/filename.py``
+
+        """
+        if 'raw.githubusercontent.com' in url:
+            raw_url = url
+        elif 'github.com/' not in url:
+            raise ValueError('The url provided is not a GitHub url.')
+        else:
+            raw_url = url.replace('github.com', 'raw.githubusercontent.com')\
+                         .replace('blob/', '')
+        return cls.from_url(raw_url, **kwargs)

@@ -33,6 +33,13 @@ baz = gi['baz']
 The function `get_imports_in_codeblock` is a helper function that finds any imports and return the modules as
 values of a dictionary.
 
+There are four entry points:
+
+* Gist id (regular initialisation)
+* codeblock as discussed via `from_code_block`
+* text file url via `from_url`
+* GitHub page url via `from_github`
+
 ## Background
 
 [GitHub Gist](https://gist.github.com/) are snippets that aren't part of regular GitHub,
