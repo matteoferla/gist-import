@@ -1,6 +1,8 @@
 from __future__ import annotations
 import requests, warnings, re
 from typing import Optional, Dict, Any, Union
+from types import ModuleType
+import sys
 from .imports import get_imports_in_codeblock  # this is not a class, but a function
 
 
@@ -149,3 +151,17 @@ class GistImporter:
             raw_url = url.replace('github.com', 'raw.githubusercontent.com')\
                          .replace('blob/', '')
         return cls.from_url(raw_url, **kwargs)
+
+    def to_module(self, sys_module_name: Optional[str]=None) -> types.ModuleType:
+        """
+        This is a convenience method to turn the GistImporter into a module.
+        """
+        if sys_module_name is not None:
+            module = ModuleType(sys_module_name)
+        else:
+            module = ModuleType('gist_imported_module')
+        module.__dict__.update(self.pocket_globals)
+        module.__doc__ = self.gist_description
+        if sys_module_name is not None:
+            sys.modules[sys_module_name] = module
+        return module
