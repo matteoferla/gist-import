@@ -21,6 +21,17 @@ gi = GistImporter('24d9a319d05773ae219dd678a3aa11be')
 Safeguard = gi['Safeguard']
 ```
 
+Additionally, a module can be made:
+
+```python
+from gist_import import GistImporter
+from types import ModuleType
+gi = GistImporter('24d9a319d05773ae219dd678a3aa11be')
+safeguard: ModuleType = gi.to_module('safeguard')
+# which can be used elsewhere...
+from safeguard import Safeguard
+```
+
 In the case of a codeblock that fails because of, say a terminal line, a warning saying so will be printed.
 ```python
 from gist_import import GistImporter
